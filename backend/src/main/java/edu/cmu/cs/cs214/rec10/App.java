@@ -1,14 +1,16 @@
 package edu.cmu.cs.cs214.rec10;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 
-import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.Template;
+import fi.iki.elonen.NanoHTTPD;
+
 import edu.cmu.cs.cs214.rec10.framework.core.GamePlugin;
 import edu.cmu.cs.cs214.rec10.framework.gui.GameState;
 import edu.cmu.cs.cs214.rec10.framework.core.GameFrameworkImpl;
-import fi.iki.elonen.NanoHTTPD;
 
 public class App extends NanoHTTPD {
 
@@ -21,9 +23,12 @@ public class App extends NanoHTTPD {
     }
 
     private GameFrameworkImpl game;
-    private Template template;
     private List<GamePlugin> plugins;
 
+    /**
+     * Start the server at :8080 port.
+     * @throws IOException
+     */
     public App() throws IOException {
         super(8080);
 
@@ -43,8 +48,10 @@ public class App extends NanoHTTPD {
         String uri = session.getUri();
         Map<String, String> params = session.getParms();
         if (uri.equals("/plugin")) {
+            // e.g., /plugin?i=0
             game.startNewGame(plugins.get(Integer.parseInt(params.get("i"))));
         } else if (uri.equals("/play")){
+            // e.g., /play?x=1&y=1
             if (game.hasGame()) {
                 game.playMove(Integer.parseInt(params.get("x")), Integer.parseInt(params.get("y")));
             }
@@ -71,6 +78,12 @@ public class App extends NanoHTTPD {
             result.add(plugin);
         }
         return result;
+    }
+
+    public static class Test {
+        public String getText() {
+            return "Hello World!";
+        }
     }
 }
 

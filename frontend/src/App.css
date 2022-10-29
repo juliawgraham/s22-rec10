@@ -16,8 +16,8 @@
 
 
 /* Dropdown Content (Hidden by Default) */
-.dropdown-content {
-  display: none;
+#dropdown-content {
+  /* display: none; */
   position: absolute;
   background-color: #f1f1f1;
   width: 100%;
@@ -28,7 +28,7 @@
 }
 
 /* Links inside the dropdown */
-.dropdown-content a {
+#dropdown-content a {
   color: black;
  font-size: 2vw;
   height: 5vh;
@@ -37,10 +37,13 @@
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: #ddd}
+#dropdown-content a:hover {background-color: #ddd}
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:block;}
+
+.hide {display:none;}
+
 
 #board {
   display: grid;
@@ -100,10 +103,6 @@
   border: 1px solid black;
 }
 
-#handlebars {
-  visibility: hidden;
-  display: none;
-}
 html,
 body {
   height: 100%;

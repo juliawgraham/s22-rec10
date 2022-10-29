@@ -51,8 +51,7 @@ public class GameState {
         List<String> gamePlugins = game.getRegisteredPluginName();
         Plugin[] plugins = new Plugin[gamePlugins.size()];
         for (int i=0; i<gamePlugins.size(); i++){
-            String link = "/plugin?i="+ i;
-            plugins[i] = new Plugin(gamePlugins.get(i), link);
+            plugins[i] = new Plugin(gamePlugins.get(i));
         }
         return plugins;
     }
@@ -64,9 +63,8 @@ public class GameState {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 String text = game.getSquare(x,y);
-                String link = "/play?x="+x+"&y="+y;
-                String clazz = game.isSquarePlayable(x,y);
-                cells[width * y + x] = new Cell(text, clazz, link);
+                boolean playable  = game.isSquarePlayable(x,y);
+                cells[width * y + x] = new Cell(x, y, text, playable);
             }
         }
         return cells;

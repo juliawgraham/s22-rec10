@@ -155,13 +155,13 @@ public class GameFrameworkImpl implements GameFramework {
         }
     }
 
-    public String isSquarePlayable(int x, int y){
+    public boolean isSquarePlayable(int x, int y){
         if (currentPlugin == null){
-            return "";
+            return false;
         } else if (currentPlugin.isMoveValid(x,y)){
-            return "playable";
+            return true;
         } else {
-            return "";
+            return false;
         }
     }
 

@@ -1,32 +1,39 @@
 package edu.cmu.cs.cs214.rec10.framework.gui;
 
 class Cell {
+    private final int x;
+    private final int y;
     private final String text;
-    private final String clazz;
-    private final String link;
+    private final boolean playable;
 
-    Cell(String text, String clazz, String link) {
+    Cell(int x, int y, String text, boolean playable) {
+        this.x = x;
+        this.y = y;
         this.text = text;
-        this.clazz = clazz;
-        this.link = link;
+        this.playable = playable;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     public String getText() {
         return this.text;
     }
 
-    public String getClazz() {
-        return this.clazz;
-    }
-
-    public String getLink() {
-        return this.link;
+    public boolean isPlayable() {
+        return this.playable;
     }
 
     @Override
     public String toString() {
         return "{ \"text\": \"" + this.text + "\"," +
-                " \"clazz\": \"" + this.clazz + "\"," +
-                " \"link\": \"" + this.link + "\"}";
+                " \"playable\": " + this.playable + "," +
+                " \"x\": " + this.x + "," +
+                " \"y\": " + this.y + " }" ;
     }
 }

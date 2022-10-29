@@ -1,158 +1,217 @@
-import Handlebars from "handlebars"
-import { Component } from 'react'
-import './App.css'
+import React from 'react';
 
-var oldHref = "http://localhost:3000"
+import './App.css'; // import the css file to enable your styles.
+import { GameState, Cell } from './game';
+import BoardCell from './Cell';
 
-interface Cell {
-  text: String;
-  clazz: String;
-  link: String;
-}
+/**
+ * Define the type of the props field for a React component
+ */
+interface Props { }
 
+/**
+ * Using generics to specify the type of props and state.
+ * props and state is a special field in a React component.
+ * React will keep track of the value of props and state.
+ * Any time there's a change to their values, React will
+ * automatically update (not fully re-render) the HTML needed.
+ * 
+ * props and state are similar in the sense that they manage
+ * the data of this component. A change to their values will
+ * cause the view (HTML) to change accordingly.
+ * 
+ * Usually, props is passed and changed by the parent component;
+ * state is the internal value of the component and managed by
+ * the component itself.
+ */
+class App extends React.Component<Props, GameState> {
+  private initialized: boolean = false;
 
-interface Plugin {
-    name: String;
-    link: String;
-}
-
-interface GameState {
-  name: String;
-  footer: String;
-  cells: Array<Cell>;
-  plugins: Array<Plugin>;
-  numColStyle: String;
-  currentPlayer: String;
-  gameOverMsg: String;
-  template: HandlebarsTemplateDelegate<any>;
-}
-
-interface Props {
-}
-
-class App extends Component<Props, GameState> {
-
+  /**
+   * @param props has type Props
+   */
   constructor(props: Props) {
-    super(props);
-    this.state = {
-      template: this.loadTemplate(),
-      cells: [
-        { text: "", clazz: "", link: "/play?x=0&y=0" },
-      ],
+    super(props)
+    /**
+     * state has type GameState as specified in the class inheritance.
+     */
+     this.state = {
+      cells: [],
       name : "A Game Framework",
       footer : "No game is running",
       plugins : [
-      { name: "Load Games", link:"/start"},
+        { name: "Load Games"},
       ],
       numColStyle : "auto",
       currentPlayer : "",
       gameOverMsg : "",
+      showDropdown: false,
     };
   }
 
-  loadTemplate (): HandlebarsTemplateDelegate<any> {
-    const src = document.getElementById("handlebars");
-    return Handlebars.compile(src?.innerHTML, {});
-  }
-
-  convertToCell(p: any): Array<Cell> {
-    const newCells: Array<Cell> = [];
-    for (var i = 0; i < p["cells"].length; i++) {
-      var c: Cell = {
-        text: p["cells"][i]["text"],
-        clazz: p["cells"][i]["clazz"],
-        link: p["cells"][i]["link"],
-      };
-      newCells.push(c);
-    }
-
-    return newCells;
-  }
-
-  convertToPlugin(p: any): Array<Plugin> {
-    const newPlugins: Array<Plugin> = [];
-    for (var i = 0; i < p["plugins"].length; i++) {
-          var plug: Plugin = {
-            name: p["plugins"][i]["name"],
-            link: p["plugins"][i]["link"],
-          };
-          newPlugins.push(plug);
-        }
-
-        return newPlugins;
-  }
-
+  /**
+   * Use arrow function, i.e., () => {} to create an async function,
+   * otherwise, 'this' would become undefined in runtime. This is
+   * just an issue of Javascript.
+   */
 
   async start(){
-    const href = "start";
-    const response = await fetch(href);
+  const response = await fetch("start");
 
+  const json = await response.json();
+  this.setState({ plugins: json["plugins"],})
+}
+
+/**
+ * play will generate an anonymous function that the component
+ * can bind with.
+ * @param x 
+ * @param y 
+ * @returns 
+ */
+  play(x: number, y: number): React.MouseEventHandler {
+  return async (e) => {
+    // prevent the default behavior on clicking a link; otherwise, it will jump to a new page.
+    e.preventDefault();
+    const response = await fetch(`/play?x=${x}&y=${y}`)
     const json = await response.json();
-    const newPlugins: Array<Plugin> = this.convertToPlugin(json);
-    this.setState({ plugins: newPlugins,})
-  }
-
-  async play(url: String) {
-    const href = "play?" + url.split("?")[1];
-    const response = await fetch(href);
-    const json = await response.json();
-
-    const newCells: Array<Cell> = this.convertToCell(json);
-    const newPlugins: Array<Plugin> = this.convertToPlugin(json);
-    this.setState({ cells: newCells, plugins: newPlugins, name: json["name"],footer:json["footer"], currentPlayer : json["currentPlayer"],
-                                                                                numColStyle : json["numColStyle"],
-                                                                                gameOverMsg : json["gameOverMsg"] })
-  }
-
-  async choosePlugin(url: String){
-    const href = "plugin?"+url.split("?")[1];
-    const response = await fetch(href);
-    const json = await response.json();
-
-    const newCells: Array<Cell> = this.convertToCell(json);
-    const newPlugins: Array<Plugin> = this.convertToPlugin(json);
-    this.setState({ cells: newCells, plugins: newPlugins, name: json["name"],footer:json["footer"],numColStyle : json["numColStyle"],
-                                                                                currentPlayer : json["currentPlayer"],
-                                                                                gameOverMsg : json["gameOverMsg"] })
-  }
-
-
-  async switch() {
-    if (
-      window.location.href.split("?")[0] === "http://localhost:3000/plugin" &&
-      oldHref !== window.location.href
-    ) {
-      this.choosePlugin(window.location.href);
-      oldHref = window.location.href;
-    } else if (
-      window.location.href.split("?")[0] === "http://localhost:3000/play" &&
-      oldHref !== window.location.href
-    ) {
-      this.play(window.location.href);
-      oldHref = window.location.href;
-    } else if (
-      window.location.href === "http://localhost:3000/" ||
-      window.location.href === "http://localhost:3000/start"
-    ){
-      this.start();
-      oldHref = window.location.href;
+    this.setState({ cells: json["cells"], 
+                    plugins: json["plugins"], 
+                    name: json["name"],
+                    footer:json["footer"], 
+                    currentPlayer : json["currentPlayer"],
+                    numColStyle : json["numColStyle"],
+                    gameOverMsg : json["gameOverMsg"] 
+                  })
     }
-  };
+  }
 
-  render() {
-    this.switch()
+  choosePlugin(i: number): React.MouseEventHandler {
+    return async (e) => {
+      e.preventDefault();
+      const response = await fetch(`/plugin?i=${i}`)
+      const json = await response.json();
+
+      this.setState({ cells: json["cells"], 
+                      plugins: json["plugins"], 
+                      name: json["name"],
+                      footer:json["footer"],
+                      numColStyle : json["numColStyle"],
+                      currentPlayer : json["currentPlayer"],
+                      gameOverMsg : json["gameOverMsg"],
+                      showDropdown: false, 
+                    })
+    }
+  }
+
+
+  createCell(cell: Cell, index: number): React.ReactNode {
+    if (cell.playable)
+      /**
+       * key is used for React when given a list of items. It
+       * helps React to keep track of the list items and decide
+       * which list item need to be updated.
+       * @see https://reactjs.org/docs/lists-and-keys.html#keys
+       */
+      return (
+        <div key={index}>
+          <a href='/' onClick={this.play(cell.x, cell.y)}>
+            <BoardCell cell={cell}></BoardCell>
+          </a>
+        </div>
+      )
+    else
+      return (
+        <div key={index}><BoardCell cell={cell}></BoardCell></div>
+      )
+  }
+
+  createInstructions() {
+    if (this.state.gameOverMsg) {
+      return (
+        <div id="game_over_message">{this.state.gameOverMsg}</div>
+      )
+    }
+    else if (this.state.currentPlayer) {
+      return (
+        <div id="current_player_name">Current player is {this.state.currentPlayer}</div>
+      )
+    }
+    else {
+      return (
+        <div></div>
+      )
+    }
+  }
+
+  createPlugin(name: string, index: number) {
+    if (name === "Load Games") {
+      return (
+        <a key={-1} href='/' onClick={this.start}>{name}</a>
+      )
+    }
+    else {
+      return (
+        <div key={index}>
+          <a href='/' onClick={this.choosePlugin(index)}>{name}</a>
+        </div>
+      )
+    }
+  }
+
+  toggleDropdown = () => {
+    this.setState({showDropdown: !this.state.showDropdown})
+  }
+
+  /**
+   * This function will call after the HTML is rendered.
+   * We update the initial state by creating a new game.
+   * @see https://reactjs.org/docs/react-component.html#componentdidmount
+   */
+  componentDidMount(): void {
+    /**
+     * setState in DidMount() will cause it to render twice which may cause
+     * this function to be invoked twice. Use initialized to avoid that.
+     */
+    if (!this.initialized) {
+      this.start();
+      this.initialized = true;
+    }
+  }
+
+  /**
+   * The only method you must define in a React.Component subclass.
+   * @returns the React element via JSX.
+   * @see https://reactjs.org/docs/react-component.html
+   */
+  render(): React.ReactNode {
+    /**
+     * We use JSX to define the template. An advantage of JSX is that you
+     * can treat HTML elements as code.
+     * @see https://reactjs.org/docs/introducing-jsx.html
+     */
     return (
-      <div className="App">
-        <div
-          dangerouslySetInnerHTML={{
-            __html: this.state.template({ cells: this.state.cells, name: this.state.name, footer: this.state.footer,
-             plugins: this.state.plugins, numColStyle: this.state.numColStyle, gameOverMsg: this.state.gameOverMsg,
-              currentPlayer : this.state.currentPlayer}),
-          }}
-        />
+      <div>
+        <div id="game_name">{this.state.name}</div>
+
+        {this.createInstructions()}
+
+        <div id="board" style={{gridTemplateColumns: this.state.numColStyle.valueOf()}}>
+          {this.state.cells.map((cell, i) => this.createCell(cell, i))}
+        </div>
+
+        <div id="footer">{this.state.footer}</div>
+
+        <div id="bottombar">
+          <button className="dropbtn" onClick={/* get the function, not call the function */this.toggleDropdown}>New Game</button>
+          <div id="dropdown-content" className={this.state.showDropdown ? "show" : "hide"}>
+            {this.state.plugins.map((plugin, index) => this.createPlugin(plugin.name, index))}
+          </div>
+       </div>
+
       </div>
-    )
-  };
-};
+    );
+  }
+}
 
 export default App;
