@@ -1,11 +1,12 @@
+import { GameFramework } from "../core/framework"
 import { GamePlugin } from "../core/gameplugin"
 
 
 // the basic game from rec07:
 
 enum Player {
-    PlayerX = 0,
-    PlayerO = 1
+    X = 0,
+    O = 1
 }
 type PlayerOrEmpty = Player | null
 
@@ -24,7 +25,7 @@ interface Board {
 
 
 function initializeGame(): Game {
-    return newGame(newEmptyBoard(), Player.PlayerX, [])
+    return newGame(newEmptyBoard(), Player.X, [])
 }
 function newGame(board: Board, nextPlayer: Player, history: Game[]): Game {
     return {
