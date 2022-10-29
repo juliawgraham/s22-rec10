@@ -1,11 +1,12 @@
+import { GameFramework } from "../core/framework"
 import { GamePlugin } from "../core/gameplugin"
 
 
 // the basic game from rec07:
 
 enum Player {
-    PlayerX = 0,
-    PlayerO = 1
+    X = 0,
+    O = 1
 }
 type PlayerOrEmpty = Player | null
 
@@ -24,7 +25,7 @@ interface Board {
 
 
 function initializeGame(): Game {
-    return newGame(newEmptyBoard(), Player.PlayerX, [])
+    return newGame(newEmptyBoard(), Player.X, [])
 }
 function newGame(board: Board, nextPlayer: Player, history: Game[]): Game {
     return {
@@ -77,9 +78,46 @@ function newBoard(cells: PlayerOrEmpty[]): Board {
 
 
 // TODO: Implement the plugin
-//
-// function init (): GamePlugin {
-//     throw new Error("not yet implemented")
-// }
-//
-// export { init }
+
+const GAME_START_FOOTER = 'Let\'s play Tic Tac Toe!'
+
+function init (): GamePlugin {
+    let framework: GameFramework | null = null
+    let game: Game
+    return {
+      getGameName () { return 'TicTacToe' },
+  
+      getGridWidth (): number { return 3 },
+  
+      getGridHeight (): number { return 3 },
+      onRegister (f: GameFramework): void { framework = f },
+      onNewGame (): void {
+        if (framework === null) return
+        framework.setFooterText(GAME_START_FOOTER);
+        game = initializeGame();
+      },
+      onNewMove (): void { }, // Nothing to do here.
+      isMoveValid (x: number, y: number): boolean {
+        return game.getWinner() === null
+      },
+      isMoveOver (): boolean {
+        return true
+      },
+      onMovePlayed (x: number, y: number): void {
+        framework?.setSquare(x, y, Player[game.getNextPlayer()]);
+        game = game.play(x, y);
+      },
+      isGameOver (): boolean {
+        return game.getWinner() !== null
+      },
+      getGameOverMessage (): string {
+        const possibleWinner: Player | null = game.getWinner();
+        if (possibleWinner == null) return "The game ended in a tie.";
+        return ("Player " + Player[possibleWinner] + " won!");
+      },
+      onGameClosed (): void { }, // Nothing to do here.
+      currentPlayer (): string { return Player[game.getNextPlayer()] }
+    }
+  }
+
+export { init }
